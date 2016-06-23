@@ -81,6 +81,7 @@ sel.row <- fit.endo$newdata$gender == "Women" # Same effect for both genders
 plot(fit.endo$newdata$age[sel.row],fit.endo$pfunctions$covariates[sel.row, "s(age)"], xlab="age", ylab="s(age)", type="l", main = "Main effect of age", ylim=c(-1,1))
 lines(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age)ul"], lty=2)
 lines(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age)ll"], lty=2)
+abline(h = 0, col="grey")
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Effect of age: deviation for males
@@ -89,6 +90,7 @@ sel.row <- fit.endo$newdata$gender == "Women"
 plot(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age, by = gender)"], xlab="age", ylab = "s(age, by=gender)", type = "l", main = " Age effect: Deviation for males", ylim = c(-1.2, 0.8))
 lines(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age, by = gender)ul"], lty=2)
 lines(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age, by = gender)ll"], lty=2)
+abline(h = 0, col="grey")
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Effect of age: deviation for females
@@ -97,6 +99,7 @@ sel.row <- fit.endo$newdata$gender == "Men"
 plot(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age, by = gender)"], xlab="age", ylab = "s(age, by=gender)", type = "l", main = " Age effect: Deviation for females", ylim = c(-0.8, 1.2))
 lines(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age, by = gender)ul"], lty=2)
 lines(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(age, by = gender)ll"], lty=2)
+abline(h = 0, col="grey")
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Effect of FPF
@@ -104,4 +107,5 @@ lines(fit.endo$newdata$age[sel.row], fit.endo$pfunctions$covariates[sel.row, "s(
 plot(fit.endo$fpf, fit.endo$pfunctions$fpf[,1], xlab = "fpf", ylab = "s(fpf)", main = "False positive fraction", type="l")
 lines(fit.endo$fpf, fit.endo$pfunctions$fpf[,2], lty=2)
 lines(fit.endo$fpf, fit.endo$pfunctions$fpf[,3], lty=2)
+abline(h = 0, col="grey")
 

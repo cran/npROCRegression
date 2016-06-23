@@ -14,9 +14,9 @@ weights = NULL)
 \arguments{
   \item{marker}{A character string with the name of the diagnostic test variable.
 }
-  \item{formula.h}{Right-hand formula(s) giving the regression and variance model(s) to be fitted in healthy population. Atomic values are also valid, being recycled.
+  \item{formula.h}{Right-hand formula(s) giving the mean and variance model(s) to be fitted in healthy population. Atomic values are also valid, being recycled.
 }
-  \item{formula.ROC}{Right-hand formula giving the ROC regression to be fitted.
+  \item{formula.ROC}{Right-hand formula giving the ROC regression model to be fitted (ROC-GAM model).
 }
   \item{group}{A character string with the name of the variable that distinguishes healthy from diseased individuals.
 }
@@ -26,7 +26,7 @@ weights = NULL)
 }
   \item{ci.fit}{A logical value. If TRUE, confidence intervals are computed.
 }
-  \item{test.partial}{A numeric vector containing the covariate terms in the ROC regression model to be tested for a possible effect. If NULL, no test is performed.
+  \item{test.partial}{A numeric vector containing the position of the covariate components in the ROC-GAM formula to be tested for a possible effect. If NULL, no test is performed.. If NULL, no test is performed.
 }
   \item{newdata}{A data frame containing the values of the covariate at which predictions are required.
 }
@@ -42,11 +42,11 @@ As a result, the function \code{DNPROCreg()} provides a list with the following 
 	\item{model}{Data frame containing all variables and observations used in the fitting process.}
 	\item{fpf}{Set of false positive fractions (FPF) at which the covariate-specific ROC curve has been estimated.}
 	\item{newdata}{Data frame containing the values of the covariates at which estimates has been obtained.}
-	\item{pfunctions}{Matrices containing the estimates of each component of the additive predictor of the ROC regression model. One matrix contains the effects of the covariates, the other the effect of the FPF. Confidence intervals are returned if required).}	
-	\item{coefficients}{Vector of parametric coefficient of the fitted ROC regression model.}
+	\item{pfunctions}{Matrices containing the estimates of each component of the additive predictor of the ROC-GAM. One matrix contains the effects of the covariates, the other the effect of the FPF. Confidence intervals are returned if required).}	
+	\item{coefficients}{Vector of parametric coefficient of the fitted ROC-GAM.}
 	\item{ROC}{Estimated covariate-specific ROC curve.}
 	\item{AUC}{Estimated covariate-specific AUC, and corresponding confidence intervals if required.}
-	\item{pvalue}{If required, p-values are obtained  - with two different bootstrap-based tests - for each model term indicated in argument \code{test.partial} (T2: \eqn{L_{2}}-based test; and T1: \eqn{L_{1}}-based test). See Rodriguez-Alvarez et al. (2016).}
+	\item{pvalue}{If required, p-values are obtained  - with two different bootstrap-based tests - for each model component indicated in argument \code{test.partial} (T2: \eqn{L_{2}}-based test; and T1: \eqn{L_{1}}-based test). See Rodriguez-Alvarez et al. (2016).}
 }
 \references{
 

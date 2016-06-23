@@ -26,16 +26,22 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 		stop("Not all needed variables are supplied in newdata")		 
 	if(length(unique(data[,group]))!=2)
 		stop(paste(group," variable must have only two different values (for healthy and diseased individuals)"), sep="")
-		
-	data.new <- na.omit(data[,c(marker,group,names.cov)])
-	data.new[,group]<- data.new[,group]!=tag.healthy
+	
+	data.new <- data[,c(marker,group,names.cov)]
+	omit <- apply(data.new, 1, anyNA)	
+	data.new <- data.new[!omit,,drop = FALSE]
+	
+	if(!is.null(weights))
+		weights <- weights[!omit]
+	
+	data.new[,group] <- data.new[,group]!= tag.healthy
 	
 	data.h <- data.new[data.new[,group]==0,]
 	data.d <- data.new[data.new[,group]!=0,]
 		
-	n <- nrow(data.new)
-	n0<- nrow(data.h)
-	n1<- nrow(data.d)
+	n  <- nrow(data.new)
+	n0 <- nrow(data.h)
+	n1 <- nrow(data.d)
 	
 	mode <- lapply(names.cov, function(x,data) switch(class(data[,x,drop=TRUE]),"integer" = 5, "numeric" = 5,"factor" = 6,"character" = 6), data=data.new)
 				

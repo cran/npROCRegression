@@ -33,15 +33,15 @@ function(marker, covariate, group, tag.healthy, data, ci.fit=FALSE, test=FALSE, 
 	l.set.cont <- length(newdata)
 	accuracy.call <- c(is.element("ROC",accuracy.cal), is.element("YI",accuracy), is.element("YI",accuracy) | is.element("EQ",accuracy), is.element("TH",accuracy))
     
-	ROC<-rep(0.0,l.set.t*l.set.cont)
-	AROC<-rep(0.0,l.set.t*3)
-	AUC<-YI<-TH<-M0<-V0<-M1<-V1<-rep(0.0,l.set.cont*3)
+	ROC <- rep(0.0,l.set.t*l.set.cont)
+	AROC <- rep(0.0,l.set.t*3)
+	AUC <- YI <- TH <- M0 <- V0 <- M1 <-V1 <-rep(0.0,l.set.cont*3)
 	pvalor = -1.0
 	if(is.null(weights))
 		weights=rep(1.0,n)
 		
-	fit=.Fortran("DLLROCInduced",					 				  
-				Z=as.double(data[,covariate]), 				      
+	fit=.Fortran("DLLROCInduced",
+				Z=as.double(data[,covariate]),
 				X=as.double(data[,marker]),
 				W=as.double(weights), 
 				Status = as.integer(data[,group]),
