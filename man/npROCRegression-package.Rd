@@ -12,8 +12,8 @@ The npROCRegression package allows the user to apply in practice the nonparametr
 \tabular{ll}{
 Package: \tab npROCRegression\cr
 Type: \tab Package\cr
-Version: \tab 1.0-1\cr
-Date: \tab 2016-06-22\cr
+Version: \tab 1.0-2\cr
+Date: \tab 2016-06-26\cr
 License: \tab GPL \cr
 }
 }

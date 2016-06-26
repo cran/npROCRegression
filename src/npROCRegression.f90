@@ -2,11 +2,11 @@
 !    ******************************************************************
      subroutine init_random_seed(seed)
      implicit none
-     integer, parameter :: ssize = selected_int_kind (16)
+     integer, parameter :: ssize = selected_int_kind (8)
      integer seed, i
      integer :: nseed = 12
      integer (kind = ssize) :: t
-     integer, allocatable :: iseed(:)
+     integer (kind = ssize), allocatable :: iseed(:)
      
      call random_seed(size = nseed)
      allocate(iseed(nseed))
@@ -699,24 +699,24 @@
      implicit none
      integer n, nf, np, p, kbin
      double precision X(n,2),Y2(n),W(n),Wx(n),mode(2),F(n), &
-          Fact(n), Xp(np,2), Fp(np), h2(p)
+          Fact(n), Xp(np,2), Fp(np), h2(n)
 
-     if (mode(1).eq.0.and.mode(2).eq.5) then          ! %%%%%%   oo -- Continuous
+     if (mode(1).eq.0.and.mode(2).eq.5) then        ! %%%%%%   ooo -- Continuous
           call RNP1DFast(X(1,2),Y2,n,W,WX,h2(2),p,kbin,F, &
           Xp(1,2), Fp, np)
-     elseif (mode(1).eq.5.and.mode(2).eq.0) then !%%%% Continuous -- ooo
+     elseif (mode(1).eq.5.and.mode(2).eq.0) then    ! %%%%%    Continuous -- ooo
           call RNP1DFast(X(1,1),Y2,n,W,WX,h2(1),p,kbin,F, &
           Xp(1,2), Fp, np)
-     elseif(mode(1).eq.0.and.mode(2).eq.6) then     ! %%%%%%     ooo - Factor
+     elseif(mode(1).eq.0.and.mode(2).eq.6) then     ! %%%%%%   ooo - Factor
           call RegFact(X(1,2),Y2,W,n,F, Xp(1,2), Fp, np)
-     elseif(mode(1).eq.6.and.mode(2).eq.0) then     ! %%%%%      Factor-ooo
+     elseif(mode(1).eq.6.and.mode(2).eq.0) then     ! %%%%%    Factor-ooo
           call RegFact(X(1,1),Y2,W,n,F, Xp (1,2), Fp, np)
-     elseif (mode(1).eq.6.and.mode(2).eq.5) then ! %%%%%   Factor-Continuous
+     elseif (mode(1).eq.6.and.mode(2).eq.5) then    ! %%%%%    Factor-Continuous
           nf=0
           if (nf.le.0) call getLevels(X(1,1),n,Fact,nf)
           call FRNP1DFast(X(1,1),X(1,2),Y2,W,Wx,Fact,n,nf,h2,p,kbin, &
                F, Xp(1,1), Xp(1,2), Fp, np)
-     elseif (mode(1).eq.5.and.mode(2).eq.6) then ! %%%%%   Continuous-Factor
+     elseif (mode(1).eq.5.and.mode(2).eq.6) then    ! %%%%%    Continuous-Factor
           nf=0
           if (nf.le.0) call getLevels(X(1,2),n,Fact,nf)
           call FRNP1DFast(X(1,2),X(1,1),Y2,W,Wx,Fact,n,nf,h2,p,kbin, &
@@ -917,7 +917,7 @@
      do i=1,kbin
           Xb(i)=xmin+(i-1)*(xmax-xmin)/(kbin-1)
      end do
-
+     Wx = 1.0
      if (h.eq.0) then
           icont=n
           call RegLinealPred(X,Y,WY,icont,p,M0,Xp,Fp,np)          
@@ -1320,26 +1320,25 @@
           weight = w/(temp*temp)
      elseif(family.eq.1.or.family.eq.7) then   ! Binomial 
           if (temp.eq.0) then                  ! family=1: logit
-               weight=0                        ! family=7: probit  
+               weight = 0                      ! family=7: probit  
                goto 1
           end if
           
-          aux=min(0.999,muhat)
-          aux=max(0.001,aux)
+          aux = min(0.999, muhat)
+          aux = max(0.001, aux)
      
-          temp1=aux*(1.0-aux)
-          aux=temp1*temp**2
-          weight=w/aux
+          temp1 = aux*(1.0 - aux)
+          aux = temp1*temp**2
+          weight = w/aux
 1    continue
      elseif (family.eq.4) then !Gamma
           weight = w/(temp*temp*muhat*muhat)
      elseif (family.eq.5) then  !Poisson
-          temp1=muhat
+          temp1 = muhat
           if(temp1.lt.0.0001) then
-               temp1=0.0001
-          else
-               weight = w/(temp*temp*temp1)
+               temp1 = 0.0001
           end if
+          weight = w/(temp*temp*temp1)
      else
           weight = w/(temp*temp)
      end if
@@ -1768,7 +1767,7 @@
           II(2,nparr+npart+1)
 
      double precision Z0(n0,nvarz), X0(n0), W0(n0), Z1(n1,nvarz), &
-           X1(n1), W1(n1), hm(nparm), hv(nparv), &
+          X1(n1), W1(n1), hm(nparm), hv(nparv), &
           M0(n0), V0(n0), Zb(nb,nvarz), tb(ntb), t(nt), &
           ROC(ntb,nb), AUC(nb), M10(n1), V10(n1), &
           Err0(n0), &     
@@ -3717,7 +3716,7 @@
      implicit none
      integer, parameter :: npart = 0, ntbc = 500
      integer n(3),nb,nt,ntb,p,kbin, nboot,tagh, Status(n(1)), &
-          i,j,it,k,iboot,auxh, auxd, &
+          i,j,k,iboot,auxh, auxd, &
           nvar, mode(nvar), &
           nparv, nparm, nparr, &
           IIm(2,nparm), IIv(2,nparv), IIr(2,nparr), &
@@ -3957,7 +3956,7 @@
      
      implicit none
      integer n(3),nb,nt,p,kbin, nboot,tagh, Status(n(1)), &
-          i,j,it,k,boot,ir0(n(2)), ir1(n(3)),auxh, auxd, &
+          i,j,boot,ir0(n(2)), ir1(n(3)),auxh, auxd, &
           ptemp(2,2), seed, n0b, n1b
      logical coutcome, cifit, test, accuracy(4)
      double precision, external:: QQ
