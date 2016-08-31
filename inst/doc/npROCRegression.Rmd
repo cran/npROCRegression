@@ -227,7 +227,7 @@ Argument    | Description
 `nboot`     | an integer value specifying the number of bootstrap resamples for the construction of the confidence intervals. By default 500.
 `level`     | a real value specifying the confidence level for the confidence intervals. By default 0.95.
 `resample.m`| a character string specifying if bootstrap resampling (for the confidence intervals) should be done with or without regard to the disease status ("coutcome" or "noutcome"). In both cases, a naive bootstrap is used. By default, the resampling is done conditionally on the disease status.
-`link`      | a character string specifying the link function ("probit" or "logit"). By default the link is the probit function.
+`link`      | a character string specifying the link function ("probit", "logit" or "cloglog"). By default the link is the probit function.
 
 ### `plot.DNPROCreg()` function
 

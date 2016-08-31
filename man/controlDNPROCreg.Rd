@@ -7,7 +7,7 @@ Function used to set several parameters controlling the ROC regression fitting p
 Function used to set several parameters controlling the ROC regression fitting process
 }
 \usage{
-controlDNPROCreg(step.p = 0.02, card.P = 50, link = c("probit", "logit"), 
+controlDNPROCreg(step.p = 0.02, card.P = 50, link = c("probit", "logit","cloglog"), 
 kbin = 30, p = 1, seed = NULL, nboot = 500, level = 0.95, 
 resample.m = c("coutcome", "ncoutcome"))
 }
@@ -16,7 +16,7 @@ resample.m = c("coutcome", "ncoutcome"))
 }
   \item{card.P}{an integer value specifying the cardinality of the set of false positive fractions used in the estimation processs. By default 50.
 }
-  \item{link}{a character string specifying the link function (``probit'' or ``logit''). By default the link is the probit function.
+  \item{link}{a character string specifying the link function (``probit'', ``logit'' or ``cloglog''). By default the link is the probit function.
 }
   \item{kbin}{an integer value specifying the number of binning knots. By default 30.
 }

@@ -216,6 +216,8 @@
           haux(1) = 0.05
           haux(nh) = 0.95
           icont = 0
+          h0 = haux(1)
+          erropt = 9e9
           do ih = 1, nh
                h = haux(ih)
                call Rfast_(h,p,Xb,Yb,Wb,Pb,kbin,1)
@@ -317,7 +319,7 @@
      implicit none
      integer i,n
      double precision X(n)
-          Meanf = 0.0     
+          Meanf = 0.0
           do i=1,n
                Meanf = Meanf + X(i)
           end do
@@ -739,27 +741,8 @@
           call linvin(n,etahat,muhat)
      elseif(linc.eq.7) then !PROBIT
           call linvpr(n,etahat,muhat)
-     end if
-     end
-!    ******************************************************************
-!    ******************************************************************
-     double precision function SLINC(muhat,linc)
-     implicit none
-     double precision muhat,linc
-     double precision,external::lincid,linclt,linclo,lincin, lincpr
-
-     if(linc.eq.2) then     !Identity
-          SLINC=LINCID(muhat)
-     elseif(linc.eq.1) then !Logit
-          SLINC=LINCLT(muhat)
-     elseif(linc.eq.5) then !Logar
-          SLINC=LINCLO(muhat)
-     elseif(linc.eq.4) then !Inver
-          SLINC=LINCIN(muhat)
-     elseif(linc.eq.7) then !Probit
-          SLINC=LINCPR(muhat)
-     else
-          SLINC=LINCID(muhat)          
+     elseif(linc.eq.8) then !CLOGLOG
+          call linvcll(n,etahat,muhat)
      end if
      end
 !     *********************************************************
@@ -768,10 +751,9 @@
      implicit none
      integer i,n
      double precision muhat(n),etahat(n)
-     do 23076 i=1,n
-     muhat(i)=etahat(i)
-23076 continue
-     return
+     do i = 1,n
+         muhat(i)=etahat(i)
+     end do
      end
 !     *********************************************************
 !     *********************************************************
@@ -780,7 +762,7 @@
      integer n,i
      double precision muhat(n),etahat(n)
      double precision pr
-     do i=1,n 
+     do i = 1,n 
           if (etahat(i).gt.10) then
                pr=exp(10.0)
           elseif (etahat(i).lt.-10) then
@@ -790,6 +772,20 @@
           end if
           pr=pr/(1+pr)
           muhat(i)=pr
+     end do
+     end
+!     *********************************************************
+!     *********************************************************
+     subroutine linvcll(n,etahat,muhat)
+     implicit none
+     integer n,i
+     double precision muhat(n),etahat(n), vmax, vmin
+     vmax = 0.9999
+     vmin = 0.0001
+     do i=1,n
+          muhat(i) = 1.0 - exp(-exp(etahat(i)))
+          muhat(i) = min(muhat(i), vmax)
+          muhat(i) = max(muhat(i), vmin)
      end do
      end
 !     *********************************************************
@@ -809,14 +805,13 @@
      implicit none
      integer i,n
      double precision muhat(n),etahat(n)
-     do 23080 i=1,n 
+     do i = 1,n 
           if (etahat(i).le.88) then
                muhat(i)=exp(etahat(i))
           else
                muhat(i)=exp(88.0)
-     end if
-23080 continue
-     return
+          end if
+     end do
      end
 !     *********************************************************
 !     *********************************************************
@@ -833,6 +828,29 @@
 23085          continue
 23082 continue
      return
+     end
+!    ******************************************************************
+!    ******************************************************************
+     double precision function SLINC(muhat,linc)
+     implicit none
+     double precision muhat,linc
+     double precision,external::lincid,linclt,linclo,lincin,lincpr,linccll
+
+     if(linc.eq.2) then     !Identity
+          SLINC=LINCID(muhat)
+     elseif(linc.eq.1) then !Logit
+          SLINC=LINCLT(muhat)
+     elseif(linc.eq.5) then !Logar
+          SLINC=LINCLO(muhat)
+     elseif(linc.eq.4) then !Inver
+          SLINC=LINCIN(muhat)
+     elseif(linc.eq.7) then !Probit
+          SLINC=LINCPR(muhat)
+     elseif(linc.eq.8) then !cloglog
+          SLINC=LINCCLL(muhat)
+     else
+          SLINC=LINCID(muhat)
+     end if
      end
 !     *********************************************************
 !     ********************************************************* 
@@ -866,6 +884,13 @@
      double precision, external :: normdev
      LINCPR = normdev(muhat)      
      end
+!     *********************************************************
+!     *********************************************************
+     double precision function LINCCLL(muhat)       !Link cloglog
+     implicit none
+     double precision muhat
+     LINCCLL = log(-log(1.0 - muhat))      
+     end     
 !     *********************************************************
 !     *********************************************************
      double precision function LINCLO(muhat)     !Link Logarithm
@@ -1229,13 +1254,13 @@
      integer n,family
      double precision fits(n),y(n),w(n)
      double precision,external::DEVGAM,DEVPOI,DEVB,DEVG
-     if(family.eq.2) then                          !Gaussian
+     if(family.eq.2) then                                     !Gaussian
           dev = devg(n,fits,y,w)
-     elseif (family.eq.1.or.family.eq.7) then      !Binomial
+     elseif (family.eq.1.or.family.eq.7.or.family.eq.8) then  !Binomial
           dev = devb(n,fits,y,w)
-     elseif(family.eq.4) then                      !Gamma
+     elseif(family.eq.4) then                                 !Gamma
           dev = devgam(n,fits,y,w)
-     elseif(family.eq.5) then                      !Poisson
+     elseif(family.eq.5) then                                 !Poisson
           dev = devpoi(n,fits,y,w)
      else
           dev = devg(n,fits,y,w)     
@@ -1312,20 +1337,22 @@
      double precision function weight(w,muhat,family,linc)
      implicit none
      integer family
-     double precision w,muhat,linc,temp1,temp,aux
+     double precision w,muhat,linc,temp1,temp,aux,vmax, vmin
      double precision,external::diriv
+     
      temp = DIRIV(muhat,linc)
-
+     vmax = 0.9999
+     vmin = 0.0001
+     
      if(family.eq.2) then !Gaussian
           weight = w/(temp*temp)
-     elseif(family.eq.1.or.family.eq.7) then   ! Binomial 
-          if (temp.eq.0) then                  ! family=1: logit
-               weight = 0                      ! family=7: probit  
-               goto 1
+     elseif(family.eq.1.or.family.eq.7.or.family.eq.8) then   ! Binomial 
+          if (temp.eq.0) then                                 ! family=1: logit
+               weight = 0                                     ! family=7: probit  
+               goto 1                                         ! family=8: cloglog  
           end if
-          
-          aux = min(0.999, muhat)
-          aux = max(0.001, aux)
+          aux = min(vmax, muhat)
+          aux = max(vmin, aux)
      
           temp1 = aux*(1.0 - aux)
           aux = temp1*temp**2
@@ -1349,7 +1376,7 @@
      double precision function DIRIV(muhat,linc)
      implicit none
      double precision muhat,linc
-     double precision,external::dirvlo,dirvlt,dirvin,dirvid,dirvpr
+     double precision,external::dirvlo,dirvlt,dirvin,dirvid,dirvpr,dirvcll
      if(linc.eq.2) then          !Identity
           DIRIV = 1
      elseif(linc.eq.1) then      !Logit
@@ -1360,6 +1387,8 @@
           DIRIV = dirvin(muhat)
      elseif(linc.eq.7) then      !Probit
           DIRIV = dirvpr(muhat)
+     elseif(linc.eq.8) then      !cloglog
+          DIRIV = dirvcll(muhat)
      else
           DIRIV=1  
      end if
@@ -1372,10 +1401,11 @@
 !    ************************************************************
      double precision function DIRVLT(muhat) !Logit
      implicit none
-     double precision muhat,pr      
-          pr=min(0.999,muhat)
-          pr=max(0.001,muhat)
-
+     double precision muhat, pr, vmax, vmin
+          vmax = 0.9999
+          vmin = 0.0001       
+          pr = min(vmax, muhat)
+          pr = max(vmin, muhat)
           pr=pr*(1.0-pr)
           dirvlt=1.0/pr
      end
@@ -1383,14 +1413,28 @@
 !    ************************************************************
      double precision function DIRVPR(muhat) !Probit
      implicit none
-     double precision muhat,pr
+     double precision muhat, pr, vmax, vmin
      double precision, external :: normdev
-          pr = min(0.999,muhat)
-          pr = max(0.001,pr)
-
+          vmax = 0.9999
+          vmin = 0.0001
+          pr = min(vmax, muhat)
+          pr = max(vmin, pr)
           pr = normdev(pr)
           pr = exp(-0.5*(pr**2))/sqrt(2*3.141593)
           dirvpr = 1.0/pr
+     end
+!    ************************************************************
+!    ************************************************************
+     double precision function DIRVCLL(muhat) !cloglog
+     implicit none
+     double precision muhat,etahat,aux, vmax, vmin
+     double precision, external :: LINCCLL
+          vmax = 700.0
+          vmin = 0.0001
+          etahat = LINCCLL(muhat)
+          etahat = min(etahat, vmax)
+          aux = max(exp(etahat)*exp(-exp(etahat)), vmin)
+          dirvcll = 1.0/aux
      end
 !    ************************************************************
 !    ************************************************************       
@@ -1398,7 +1442,7 @@
      implicit none
      double precision muhat
           if(muhat.le.0.0001) then
-               DIRVLO=1.0/.0001
+               DIRVLO=1.0/0.0001
           else
                DIRVLO=1.0/muhat
           end if
@@ -1471,7 +1515,7 @@
      double precision X(n,nvar), Y(n), W(n), &
           hm(nparm), hv(nparv), &
           M(n), V(n), Xp(np,nvar), Mp(np), Vp(np), &
-          Err(n), LnErr(n), sumv, theta
+          Err(n), LnErr(n), sumv, theta, vmin
      double precision,external::Reg_0
      double precision,allocatable::LnV(:), LnVp(:), hmcall(:,:), &
           hvcall(:,:), Fm(:,:), Fmp(:, :), Fv(:,:), Fvp(:, :), eLnV(:), &
@@ -1480,7 +1524,8 @@
           Fm(n,nparm), Fmp(np, nparm), Fv(n,nparv), Fvp(np, nparv), &
           eLnV(n), eLnVp(np), coeff(20))
 
-     naux=n
+     naux = n
+     vmin = 0.000001
      !******************************
      !     Mean
      !******************************
@@ -1501,7 +1546,7 @@
      !******************************
      do i =1,naux
           Err(i)=(Y(i)-M(i))**2
-          LnErr(i)=log(max(Err(i),0.000001))
+          LnErr(i)=log(max(Err(i),vmin))
      end do
      if(nparv.eq.1.or.sumv.eq.0) then
           pv = 0
@@ -1525,10 +1570,10 @@
           end do
      end if
      do i=1,naux
-          V(i)=max(V(i), 0.00001)
+          V(i) = max(V(i), vmin)
      end do
      do i=1,np
-          Vp(i)=max(Vp(i), 0.00001)
+          Vp(i) = max(Vp(i), vmin)
      end do
      deallocate (LnV, LnVp, hmcall, hvcall, Fm, Fmp, Fv, &
           Fvp, eLnV, eLnVp, coeff)
@@ -1774,12 +1819,15 @@
           pPV(n1), &
           Fp(nb*ntb, nparr+npart+1), &
           hroc(nparr+npart+1), aux, &
-          coeff(20)
+          coeff(20), vmin, vmax
 
      double precision,external:: SD, cAUC,Med, Var, normdev
 
      double precision, allocatable:: ZROC(:,:), XROC(:), WROC(:)     
      allocate (ZROC(n1*nt,nvarz+1), XROC(n1*nt), WROC(n1*nt))
+     
+     vmin = 0.0001
+     vmax = 0.9999
 
      !*******************************
      !     Healthy individuals
@@ -1803,8 +1851,8 @@
                     ZROC((i-1)*nt+it,nvarz+1)=t(it)
                else
                     aux=t(it)
-                    aux=max(0.0001,aux)
-                    aux=min(0.9999,aux)
+                    aux = max(vmin, aux)
+                    aux = min(vmax, aux)
                     ZROC((i-1)*nt+it,nvarz+1)=normdev(aux)
                end if
                if (pPV(i).gt.t(it)) then
@@ -1861,7 +1909,7 @@
           mode0(nvar), iopt, proc(npar), family 
      double precision ZROC(nroc,nvar),XROC(nroc), WROC(nroc), &
           Zb(nb,nvar-1), t(nt), ROC(nt,nb), hroc(npar), &
-          Fp(nb*nt,npar), aux, coeff(20)
+          Fp(nb*nt,npar), aux, coeff(20), vmax, vmin
      double precision, external :: normdev
      double precision,allocatable::F(:,:), muhat(:), muhatp(:), &
           Zp(:,:), hrocn(:,:)
@@ -1869,6 +1917,8 @@
           Zp(nb*nt, nvar), hrocn(nroc,npar))
      ! Initialize
      proc=1
+     vmax = 0.9999
+     vmin = 0.0001
      do i=1,nroc
           do j=1,npar
                hrocn(i,j) = hroc(j)
@@ -1883,9 +1933,9 @@
                if(iopt.eq.0) then ! FPF (smooth)
                     Zp((i-1)*nt+it,nvar)=t(it)
                else
-                    aux=t(it)
-                    aux=max(0.0001,aux)
-                    aux=min(0.9999,aux)
+                    aux = t(it)
+                    aux = max(vmin, aux)
+                    aux = min(vmax, aux)
                     Zp((i-1)*nt+it,nvar)=normdev(aux)
                end if
           enddo

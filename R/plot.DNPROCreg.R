@@ -97,10 +97,11 @@ function(x, ask = TRUE, ...) {
 	names.cat <- if(n.cat > 0) names.cov[ind.cat]
 	
 	delete.obs <- duplicated(x$newdata)
-	ROC <- ROC[!delete.obs,,drop = FALSE]
-	ROC <- ROC[order(ROC[, names.cont]),,drop = FALSE]	
-		 
-	if (n.cont > 1) ROC[, names.cont] <- apply(round(ROC[ , names.cont, drop = FALSE], 3), 2, factor)
+	ROC <- ROC[!delete.obs,,drop = FALSE]		 
+	if (n.cont > 1) {
+		ROC <- ROC[order(ROC[, names.cont]),,drop = FALSE]
+		ROC[, names.cont] <- apply(round(ROC[ , names.cont, drop = FALSE], 3), 2, factor)
+	}
 	if (n.cat > 0) {
 		exp.cat <- unique(ROC[, names.cat, drop = FALSE])
 		exp.cat.matrix <- as.matrix(exp.cat)
@@ -112,6 +113,8 @@ function(x, ask = TRUE, ...) {
 			print(xyplot(as.formula(paste("ROC ~ p |", paste(names.cat, collapse = "+"))),
 			data = ROC.long,
 			ylim = c(-0.1,1.05),
+			xlab = "FPF",
+			ylab = "TPF",
 			strip = strip.custom(strip.names = TRUE, strip.levels = TRUE, sep = " = ",
 			par.strip.text = list(cex = if(!is.null(dots$cex.par.strip.text)) dots$cex.par.strip.text else 0.75)),
 			panel = function(x, y, subscripts) {
@@ -126,7 +129,7 @@ function(x, ask = TRUE, ...) {
 						labels = paste(set.accuracy[i],"=",acc.val), adj = c(1,0.5),
 						cex = if(!is.null(dots$cex.legend)) dots$cex.legend else 0.5)
 					}
-			}))					 
+			}))
 		} else {
 			if(n.cont == 1) {
 				if (length(names.cat) == 1) {

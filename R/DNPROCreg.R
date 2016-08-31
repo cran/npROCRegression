@@ -13,8 +13,9 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 	if(inherits(formula.ROC, "character")) formula.ROC <- c(as.formula(formula.ROC))
 		
 	names.cov.hm <- all.vars(formula.h[[1]])
-	names.cov.hv <- all.vars(formula.h[[2]])	
-	names.cov.ROC <- all.vars(formula.ROC[[1]])		 
+	names.cov.hv <- all.vars(formula.h[[2]])
+	names.cov.ROC <- all.vars(formula.ROC[[1]])
+	names.cov.hp <- c(names.cov.hm, names.cov.hv[is.na(match(names.cov.hv, names.cov.hm))])
 	names.cov <- c(names.cov.hm, names.cov.hv[is.na(match(names.cov.hv,c(names.cov.hm,names.cov.ROC)))], names.cov.ROC[is.na(match(names.cov.ROC,c(names.cov.hm,names.cov.hv)))])		   
 	
 	
@@ -28,20 +29,28 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 		stop(paste(group," variable must have only two different values (for healthy and diseased individuals)"), sep="")
 	
 	data.new <- data[,c(marker,group,names.cov)]
-	omit <- apply(data.new, 1, anyNA)	
-	data.new <- data.new[!omit,,drop = FALSE]
+	omit.h <- apply(data.new[data.new[,group] == tag.healthy, c(marker, group, names.cov.hp)], 1, anyNA)	
+	omit.d <- apply(data.new[data.new[,group] != tag.healthy, ], 1, anyNA)
+	
+	data.new <- rbind(data.new[data.new[,group] == tag.healthy,,drop = FALSE][!omit.h,,drop = FALSE], data.new[data.new[,group] != tag.healthy,,drop = FALSE][!omit.d,,drop = FALSE])
 	
 	if(!is.null(weights))
-		weights <- weights[!omit]
+		weights <- c(weights[data.new[,group] == tag.healthy][!omit.h], weights[data.new[,group] != tag.healthy][!omit.d])
 	
-	data.new[,group] <- data.new[,group]!= tag.healthy
+	data.new[,group] <- data.new[,group] != tag.healthy
 	
-	data.h <- data.new[data.new[,group]==0,]
-	data.d <- data.new[data.new[,group]!=0,]
+	data.h <- data.new[data.new[,group] == 0,]
+	data.d <- data.new[data.new[,group] != 0,]
 		
 	n  <- nrow(data.new)
 	n0 <- nrow(data.h)
 	n1 <- nrow(data.d)
+	
+	if(n0 == 0)
+		stop("There are no valid healthy individuals (please check missing entries)")
+	
+	if(n1 == 1)
+		stop("There are no valid diseased individuals (please check missing entries)")	
 	
 	mode <- lapply(names.cov, function(x,data) switch(class(data[,x,drop=TRUE]),"integer" = 5, "numeric" = 5,"factor" = 6,"character" = 6), data=data.new)
 				
@@ -81,10 +90,12 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 	dm <- create.design.matrices(extract.fROC, names.cov, mode, data.new, data.f)
 	coeff <- rep(-1, dm$ncoeff + 1)
 	
+	data.f <- replace(data.f, is.na(data.f), -99999)
+	
 	if(is.null(weights))
 		weights=rep(1.0,n)
 		
-	fit=.Fortran("DLLROCDirect",									  
+	fit=.Fortran("DLLROCDirect",
 				 Z=matrix(as.double(as.matrix(data.f[,names.cov])),ncol=length(names.cov)),
 				 X=as.double(data.f[,marker]),
 				 W=as.double(weights),			   
@@ -103,7 +114,7 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 				 nparr = as.integer(extract.fROC$npartial),			  
 				 IIr = matrix(as.integer(extract.fROC$II),nrow=2),
 				 hr = as.double(extract.fROC$h),
-				 family = as.integer(ifelse(control$link=="probit",7,1)),
+				 family = as.integer(switch(control$link, probit = 7, logit = 1, cloglog = 8)),
 				 Zb=matrix(as.double(as.matrix(newdata.f[,names.cov])),ncol=length(names.cov)),
 				 nb=as.integer(l.set.cont),
 				 ntb=as.integer(l.set.t),

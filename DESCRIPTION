@@ -1,8 +1,8 @@
 Package: npROCRegression
 Type: Package
 Title: Kernel-Based Nonparametric ROC Regression Modelling
-Version: 1.0-2
-Date: 2016-06-26
+Version: 1.0-3
+Date: 2016-08-30
 Imports: lattice, graphics, stats
 Suggests: knitr, rmarkdown
 Authors@R: c(
@@ -14,9 +14,9 @@ VignetteBuilder: knitr
 NeedsCompilation: yes
 License: GPL
 LazyLoad: yes
-Packaged: 2016-06-26 09:45:24 UTC; Cote
+Packaged: 2016-08-30 19:08:20 UTC; Cote
 Author: Maria Xose Rodriguez-Alvarez [aut, cre],
   Javier Roca-Pardinas [aut]
 Maintainer: Maria Xose Rodriguez-Alvarez <mxrodriguez@uvigo.es>
 Repository: CRAN
-Date/Publication: 2016-06-26 14:27:56
+Date/Publication: 2016-08-31 08:23:06

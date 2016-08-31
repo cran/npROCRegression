@@ -9,7 +9,7 @@ create.design.matrices <- function(iROCf, names.cov, mode, data, data.f) {
 			if(mode[iROCf$II[2,i]] == 6) {
 				npar <- npar + 1
 				levels <- levels(data[ ,names.cov[iROCf$II[2,i]], drop=TRUE])
-				levels <- levels[unique(data.f[ ,names.cov[iROCf$II[2,i]], drop=TRUE])]
+				levels <- levels[na.omit(unique(data.f[ ,names.cov[iROCf$II[2,i]], drop=TRUE]))]
 				dm[[npar]] <- contr.sum(levels)
 				attr(dm[[npar]], "varnames") <- paste(names.cov[iROCf$II[2,i]],"_", levels, sep = "")
 				ncoeff <- ncoeff + length(levels) - 1

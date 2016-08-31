@@ -2,7 +2,7 @@ controlDNPROCreg <-
 function(
    step.p = 0.02,
    card.P = 50,
-   link = c("probit", "logit"),                                                         
+   link = c("probit", "logit","cloglog"),                                                         
    kbin = 30,
    p = 1,
    seed = NULL,
