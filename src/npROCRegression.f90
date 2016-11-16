@@ -763,10 +763,10 @@
      double precision muhat(n),etahat(n)
      double precision pr
      do i = 1,n 
-          if (etahat(i).gt.10) then
-               pr=exp(10.0)
-          elseif (etahat(i).lt.-10) then
-               pr=exp(10.0)
+          if (etahat(i).gt.30) then
+               pr=exp(30.0)
+          elseif (etahat(i).lt.-30) then
+               pr=exp(-30.0)
           else
                pr=exp(etahat(i))
           end if
@@ -866,14 +866,14 @@
      double precision muhat, logit, d
      logit=muhat
      d=1.0-logit
-     if(d.lt.0.0001) d=0.0001
+!    if(d.lt.0.0001) d=0.0001
      logit=logit/d
      if(logit.lt.0.0001) then
           LINCLT=log(0.0001)
      elseif(logit.gt.9999.0) then
           LINCLT=log(9999.0)
      else
-          LINCLT=log(muhat)
+          LINCLT=log(logit)
      end if
      end
 !     *********************************************************
@@ -1402,10 +1402,10 @@
      double precision function DIRVLT(muhat) !Logit
      implicit none
      double precision muhat, pr, vmax, vmin
-          vmax = 0.9999
-          vmin = 0.0001       
+          vmax = 0.999
+          vmin = 0.001       
           pr = min(vmax, muhat)
-          pr = max(vmin, muhat)
+          pr = max(vmin, pr)
           pr=pr*(1.0-pr)
           dirvlt=1.0/pr
      end
@@ -1658,6 +1658,7 @@
           pvalue)                                          ! Output
      implicit none
      integer, parameter :: nboot=400, ntaux=1
+     logical optaccYI, optacc(2)
      integer n0, n1, kbin, nt, family, ntb, i, iopt, &
           iboot,parz, & 
           nvarz, mode0z(nvarz), &
@@ -1680,36 +1681,52 @@
      double precision,external::SD, cAUC,Med, Var
      
      double precision, allocatable:: M0(:), V0(:), ROC(:,:), AUC(:), &
+          YI(:), TH(:), &
           Fp(:,:),&
-          M00(:), V00(:), ROC0(:,:), AUC0(:), &
-          Fp0(:,:), &
-          hroc0(:), t0(:), &
+          M0b(:), V0b(:), ROC0(:,:), AUC0(:), &
+          YI0(:), TH0(:), &
+          Fp0(:,:), &        
+          hroc0(:), hm0(:), hv0(:),&
+          t0(:), &
           ROCs(:,:), Fps(:,:), &
-          hrocs(:),Test(:), Testb(:), &
-          hrocs2(:), M10(:), V10(:), &
+          hrocs(:), &
+          Test(:), Testb(:), &
+          hrocs2(:), &
+          M10(:), V10(:), &
           Err0(:), X0b(:), X1b(:), SH(:), AUCs(:), &
+          YIs(:), THs(:), &
           coeffb(:)
 
      allocate (M0(n0),V0(n0), &
-          M00(n0), V00(n0), & 
+          M0b(n1), V0b(n1), & 
           ROC0(ntb,n1), AUC0(n1), &
+          YI0(n1), TH0(n1), &
           ROC(ntaux,n1), AUC(n1), &
+          YI(n1), TH(n1), &
           ROCs(ntaux,n1), AUCs(n1), &
+          YIs(n1), THs(n1), &
           Fp(ntaux*n1,nparr+npart+1), &
           Fps(ntaux*n1,nparr+npart+1), &
           Fp0(n1*ntb,nparr+npart+1), &
           hroc0(nparr+npart+1), &
           hrocs(nparr+npart+1), &
           hrocs2(nparr+npart+1), &
+          hm0(nparm), &
+          hv0(nparv), &
           Test(20),Testb(20), &
           t0(n1), &
           M10(n1), V10(n1), &
           Err0(n0), X0b(n0), X1b(n1), SH(n1), &
           coeffb(20))
-
+          
+     ! Initialize options
+     optaccYI = .FALSE. 
+     optacc(1) = .FALSE.
+     optacc(2) = .FALSE.
+     
      hroc0=hroc 
      hrocs2=hroc
-
+     
      Test=0
      taux(1)=0.0
 !    ****************************************************************
@@ -1721,7 +1738,9 @@
                     npart,IIt, &
                     kbin,pm,pv,hm,hv,hroc,iopt, &
                     Z1,n1,taux,ntaux, &
-                    M0,V0,ROC,AUC,Fp,coeffb)
+                    M0b,V0b,ROC,AUC, &
+                    optaccYI, optacc, YI, TH, &
+                    Fp,coeffb)
           ! Tests
           do i=1,ntaux*n1
                Test(1) = Test(1)+ (Fp(i,parz))**2
@@ -1737,7 +1756,9 @@
                     npart,IIt, &
                     kbin,pm,pv,hm,hv,hroc0,iopt, &
                     Z1,n1,tb,ntb, &
-                    M00,V00,ROC0,AUC0,Fp0,coeffb)
+                    M0b,V0b,ROC0,AUC0, & 
+                    optaccYI, optacc, YI0, TH0, &
+                    Fp0,coeffb)
           call LocScaleGam(Z0,X0,W0,n0, &
                nvarz,mode0z, nparm,IIm, nparv, IIv, hm, hv, pm, pv, &
                kbin, M0, V0, Z1, M10, V10, n1)
@@ -1751,7 +1772,7 @@
           ! Healthy individuals
           call sample_int(n0,n0,ir0)
           do i=1,n0
-               X0b(i)=M0(i) + sqrt(V0(i))*Err0(int(ir0(i)))
+               X0b(i)= M0(i) + sqrt(V0(i))*Err0(int(ir0(i)))
           end do
           ! Diseased individuals
           do i=1,n1
@@ -1768,7 +1789,9 @@
                     npart,IIt, & 
                     kbin,pm,pv,hm,hv,hrocs,iopt, &
                     Z1,n1,taux,ntaux, &
-                    M00,V00,ROCs,AUCs,Fps,coeffb)
+                    M0b,V0b,ROCs,AUCs, &
+                    optaccYI, optacc, YIs, THs, &                    
+                    Fps,coeffb)
 
           Testb = 0
           do i=1,ntaux*n1
@@ -1783,11 +1806,12 @@
                pvalue(2)=pvalue(2)+1.0/nboot
           end if
      end do
-     deallocate (M0, V0, ROC, AUC, Fp,  & 
-          M00, V00, ROC0, AUC0, Fp0,  &
-          hroc0, t0, ROCs, Fps,  & 
-          hrocs, Test, Testb, hrocs2, M10, V10,  &
-          Err0, X0b, X1b, SH, AUCs,  &
+     deallocate (M0, V0, ROC, AUC, YI, TH, Fp,  & 
+          M0b, V0b, ROC0, AUC0, YI0, TH0, Fp0,  &
+          hroc0, hm0, hv0, t0, ROCs, Fps,  & 
+          hrocs, Test, Testb, &
+          hrocs2, M10, V10,  &
+          Err0, X0b, X1b, SH, AUCs, YIs, THs, &
           coeffb)
      end subroutine
 !    ******************************************************************
@@ -1799,8 +1823,12 @@
           npart, IIt, &
           kbin,pm,pv, hm, hv, hroc,iopt, &
           Zb,nb,tb,ntb, &
-          M0, V0, ROC, AUC, Fp, coeff)
+          M0b, V0b, ROC, AUC, &
+          optaccYI, optacc, YI, TH, &
+          Fp, coeff)
      implicit none
+     integer, parameter :: ntyi = 1000
+     logical optaccYI, optacc(2)
      integer n0, n1, kbin, nb, nt, ntb, family, &
           i, j, it, iopt, &
           nvarz, mode0z(nvarz), mode0(nvarz+1), &
@@ -1809,26 +1837,29 @@
           nparr, IIr(2,nparr), &
           npart, IIt(npart), &
           pm(nparm), pv(nparv),&
-          II(2,nparr+npart+1)
+          II(2,nparr+npart+1), maxt
 
      double precision Z0(n0,nvarz), X0(n0), W0(n0), Z1(n1,nvarz), &
           X1(n1), W1(n1), hm(nparm), hv(nparv), &
-          M0(n0), V0(n0), Zb(nb,nvarz), tb(ntb), t(nt), &
-          ROC(ntb,nb), AUC(nb), M10(n1), V10(n1), &
+          M0b(nb), V0b(nb), Zb(nb,nvarz), tb(ntb), t(nt), &
+          ROC(ntb,nb), AUC(nb), YI(nb), TH(nb), &
+          M0(n0), V0(n0), &
+          M10(n1), V10(n1), &          
           Err0(n0), &     
           pPV(n1), &
           Fp(nb*ntb, nparr+npart+1), &
           hroc(nparr+npart+1), aux, &
-          coeff(20), vmin, vmax
+          coeff(20), vmin, vmax, temp, temp1
 
      double precision,external:: SD, cAUC,Med, Var, normdev
 
-     double precision, allocatable:: ZROC(:,:), XROC(:), WROC(:)     
+     double precision, allocatable:: ZROC(:,:), XROC(:), WROC(:), &
+                                     ROC_YI(:,:), Fp_YI(:,:), tyi(:), &
+                                     SH_YI(:)     
      allocate (ZROC(n1*nt,nvarz+1), XROC(n1*nt), WROC(n1*nt))
      
      vmin = 0.0001
      vmax = 0.9999
-
      !*******************************
      !     Healthy individuals
      !*******************************
@@ -1895,7 +1926,68 @@
           ROC, Fp, coeff)
      do i=1,nb
           AUC(i) = cAUC(ROC(1,i),tb,ntb)
+          ROC(1,i) = 0.0
+          ROC(ntb,i) = 1.0
      end do
+     !******************************************************************
+     !     YI, EQ and associated cut-points
+     !******************************************************************
+     YI = 0.0
+     TH = 0.0
+     if(optacc(1).or.optacc(2)) then
+          allocate(tyi(ntyi), ROC_YI(ntyi, nb), Fp_YI(nb*ntyi, nparr+npart+1), &
+                   SH_YI(ntyi))
+          do i=1,ntyi
+              tyi(i) = (i-1)*1.0/(ntyi-1)
+          end do
+          
+          ! ROC curve for the YI
+          call GAMROC(ZROC, XROC, WROC, nt*n1, family, &
+          hroc, nvarz+1, nparr+npart+1,II, mode0, iopt,kbin, &
+          Zb,nb,tyi,ntyi, &
+          ROC_YI, Fp_YI, coeff)
+          
+          ! Mean and variance in prediction dataset (for thresholds) 
+          call LocScaleGam(Z0,X0,W0,n0, &
+          nvarz,mode0z, nparm,IIm, nparv, IIv, hm, hv, pm, pv, &
+          kbin, M0, V0, Zb, M0b, V0b, nb)
+          
+          do i=1,n0          
+              Err0(i)=(X0(i)-M0(i))/sqrt(V0(i))
+          end do
+          
+          ! Inverse of the SH
+          call SH_(tyi,ntyi,Err0,W0,n0,SH_YI)
+          
+          do i = 1,nb        
+            if(optaccYI) then
+                 maxt = 1
+                 YI(i) = 0.0
+                 do j = 1, ntyi
+                      temp = abs(ROC_YI(j,i)-tyi(j))
+                      if(temp .gt. YI(i)) then 
+                           YI(i) = temp
+                           maxt = j
+                      end if
+                 end do
+            else
+                 maxt=1
+                 temp1=1
+                 do j = 1, ntyi
+                      temp=abs(ROC_YI(j,i)-1+tyi(j))
+                      if(temp.lt.temp1) then
+                           temp1=temp
+                           maxt=j
+                      end if
+                 end do
+                 YI(i)=1.0-tyi(maxt)
+            end if
+            if(optacc(2)) then
+                 TH(i) = M0b(i) + sqrt(V0b(i))*SH_YI(maxt)
+            end if
+         end do
+         deallocate(tyi, ROC_YI, Fp_YI)
+     end if
      deallocate (ZROC, XROC, WROC)
      end
 !    ******************************************************************
@@ -2139,7 +2231,7 @@
      !******************************************************************
      !     Standardized residuals
      !******************************************************************
-      do i=1,n0
+     do i=1,n0
           Err0(i)=(X0(i)-M0(i))/sqrt(V0(i))
      end do
       do i=1,n1
@@ -2190,7 +2282,7 @@
                          ntyi, SH_YI, ROC_YI(1,i))          
                     if(optaccYI) then
                          maxt = 1
-                         YI(i) = 0
+                         YI(i) = 0.0
                          do j = 1, ntyi
                               temp = abs(ROC_YI(j,i)-tyi(j))
                               if(temp .gt. YI(i)) then 
@@ -3761,7 +3853,7 @@
           tpartial,npartial, &            ! Test
           Fp_, &                          ! Output
           coeff_, &                       ! Output
-          ROC_, AUC_, &                   ! Output
+          ROC_, AUC_, &                   ! Output     
           pvalue_)                        ! Output
      implicit none
      integer, parameter :: npart = 0, ntbc = 500
@@ -3773,19 +3865,20 @@
           IIt(npart), family, &
           n0b, n1b, &
           npartial, tpartial(npartial), seed
-     logical coutcome, cifit
+     logical coutcome, cifit, accuracy(3)
      double precision, external:: QQ
      ! Argumentos de entrada
      double precision Z(n(1),nvar), X(n(1)), W(n(1)), &
-          Zb(nb,nvar), ROC_(ntb,nb), AUC_(nb,3), &
+          Zb(nb,nvar), ROC_(ntb,nb), &
           hm(nparm), hv(nparv), hr(nparr), &
           Fp_(nb*ntb, nparr+npart+1, 3), &
           level, pvalue_(2, npartial), &
-          coeff_(20)
+          coeff_(20), AUC_(nb,3), YI_(nb,3), TH_(nb,3), &
+          M0_(nb, 3), V0_(nb, 3)
 
      integer, allocatable::pm(:), pv(:)
      double precision, allocatable:: &
-          AUC(:), Fp(:,:), &
+          AUC(:), YI(:), TH(:), Fp(:,:), &
           ROC(:,:),  &
           tb(:), t(:), &
           hcallr(:), &
@@ -3796,15 +3889,17 @@
           M0(:), V0(:), &
           X0b(:),X1b(:),Z0b(:,:),Z1b(:,:), &
           W0b(:), W1b(:), &
-          M0b(:), V0b(:), &
+          M0s(:,:), V0s(:,:), &
           hopt(:,:), &
           AUCs(:,:), &
+          YIs(:,:), &
+          THs(:,:), &
           Z0b2(:,:), &
           Z1b2(:,:), &
           Fps(:,:,:), &
           tbc(:),pvalue(:), &
           coeffb(:)
-     allocate (AUC(nb), &
+     allocate (AUC(nb), YI(nb), TH(nb), &
           ROC(ntb,nb), &
           Fp(nb*ntb, nparr+npart+1), &
           t(nt),tb(ntb), &
@@ -3814,10 +3909,12 @@
           hmb(nparm), hvb(nparv), &
           Z0(n(2),nvar),X0(n(2)),W0(n(2)), &
           Z1(n(3),nvar),X1(n(3)),W1(n(3)), &
-          M0(n(2)), V0(n(2)), &
-          M0b(n(1)), V0b(n(1)), &
+          M0(nb), V0(nb), &
+          M0s(nboot,nb), V0s(nboot,nb), &
           hopt(2,2), &
           AUCs(nboot,nb), & 
+          YIs(nboot,nb), &
+          THs(nboot,nb), &
           Fps(nboot, nb*ntb, nparr+npart+1), & 
           tbc(ntbc), pvalue(2), coeffb(20))
 
@@ -3834,6 +3931,10 @@
      do i=1,ntbc
           tbc(i)=(i-1)*1.0/(ntbc-1)
      end do
+     ! accuracy: not yet implemented
+     accuracy(1) = .FALSE. 
+     accuracy(2) = .FALSE. 
+     accuracy(3) = .FALSE. 
 
      !Load healthy and diseased individuals
      auxh = 0
@@ -3881,9 +3982,15 @@
           kbin, pm, pv, &
           hm, hv, hcallr, 0, &
           Zb,nb,tb,ntb, &
-          M0, V0, ROC_, AUC, Fp, coeff_)
+          M0, V0, ROC_, AUC, &
+          accuracy(1), accuracy(2:3), YI, TH, &
+          Fp, coeff_)
      do i=1,nb
           AUC_(i,1)= AUC(i)
+          YI_(i,1)= YI(i)
+          TH_(i,1)= TH(i)
+          M0_(i,1)= M0(i)
+          V0_(i,1)= V0(i)
           do j=1,ntb
                do k=1,nparr+npart+1
                     Fp_((i-1)*ntb+j,k,1)=Fp((i-1)*ntb+j,k)
@@ -3928,11 +4035,16 @@
                     kbin, pm, pv, &
                     hm, hv, hcallr,0, &
                     Zb,nb,tb,ntb, &
-                    M0b, V0b, ROC, AUC, & 
+                    M0, V0, ROC, AUC, &
+                    accuracy(1), accuracy(2:3), YI, TH, & 
                     Fp, coeffb)
                deallocate (Z0b2, Z1b2)
                do i=1,nb
                     AUCs(iboot,i) = AUC(i)
+                    YIs(iboot,i) = YI(i)
+                    THs(iboot,i) = TH(i)
+                    M0s(iboot,i) = M0(i)
+                    V0s(iboot,i) = V0(i)
                     do j=1,ntb
                          do k=1,nparr+npart+1
                               Fps(iboot,(i-1)*ntb+j,k)=Fp((i-1)*ntb+j,k)
@@ -3944,6 +4056,18 @@
                ! AUC
                AUC_(i,2) = QQ(AUCs(1,i), nboot, (1-level)/2)
                AUC_(i,3) = QQ(AUCs(1,i), nboot, 1-((1-level)/2))
+               ! YI
+               YI_(i,2) = QQ(YIs(1,i), nboot, (1-level)/2)
+               YI_(i,3) = QQ(YIs(1,i), nboot, 1-((1-level)/2))
+               ! TH
+               TH_(i,2) = QQ(THs(1,i), nboot, (1-level)/2)
+               TH_(i,3) = QQ(THs(1,i), nboot, 1-((1-level)/2))
+               ! M0
+               M0_(i,2) = QQ(M0s(1,i), nboot, (1-level)/2)
+               M0_(i,3) = QQ(M0s(1,i), nboot, 1-((1-level)/2))
+               ! V0
+               V0_(i,2) = QQ(V0s(1,i), nboot, (1-level)/2)
+               V0_(i,3) = QQ(V0s(1,i), nboot, 1-((1-level)/2))
                do j=1,ntb
                     do k=1,nparr+npart+1
                               Fp_((i-1)*ntb+j,k,2)=QQ(Fps(1,(i-1)*ntb+j,k), &
@@ -3980,7 +4104,7 @@
                pvalue_(2,i) = pvalue(2)
           end do
      end if
-     deallocate(AUC, ROC, Fp, &
+     deallocate(AUC, YI, TH, ROC, Fp, &
           t,tb, &
           pm,pv, &
           hcallr, &
@@ -3989,9 +4113,11 @@
           Z0,X0,W0, &
           Z1,X1,W1, &
           M0, V0, &
-          M0b, V0b, &
+          M0s, V0s, &
           hopt, &
           AUCs, &
+          YIs, &
+          THs, &
           Fps,tbc,pvalue,coeffb)   
      end
 !    ******************************************************************************

@@ -12,22 +12,22 @@ The npROCRegression package allows the user to apply in practice the nonparametr
 \tabular{ll}{
 Package: \tab npROCRegression\cr
 Type: \tab Package\cr
-Version: \tab 1.0-3\cr
-Date: \tab 2016-08-30\cr
+Version: \tab 1.0-4\cr
+Date: \tab 2016-11-15\cr
 License: \tab GPL \cr
 }
 }
 \author{
 Maria Xose Rodriguez - Alvarez and Javier Roca-Pardinas
 
-Maintainer: Maria Xose Rodriguez - Alvarez <mxrodriguez@uvigo.es>
+Maintainer: Maria Xose Rodriguez - Alvarez <mxrodriguez@bcamath.org>
 }
 \references{
 Rodriguez-Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2011a). ROC curve and covariates: extending induced methodology to the non-parametric framework. Statistics and Computing, 21(4), 483--499.
 
 Rodriguez-Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2011b). A new flexible direct ROC regression model - Application to the detection of cardiovascular risk factors by anthropometric measures. Computational Statistics and Data Analysis, 55(12), 3257--3270.
 
-Rodriguez-Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2016). Boostrap-based procedures for inference in nonparametric ROC regression analysis. Technical report.
+Rodriguez-Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2016). Bootstrap-based procedures for inference in nonparametric ROC regression analysis. Technical report.
 }
 \keyword{package}
 %\seealso{}

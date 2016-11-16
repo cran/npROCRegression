@@ -23,11 +23,11 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 		stop("Newdata must be a data frame")
 	if(sum(is.na(match(c(marker,names.cov,group), names(data)))))
 		stop("Not all needed variables are supplied in data")	
-	if(sum(!is.null(newdata) && is.na(match(names.cov, names(newdata)))))
+	if(sum(!is.null(newdata) && length(names.cov) != 0 && is.na(match(names.cov, names(newdata)))))
 		stop("Not all needed variables are supplied in newdata")		 
-	if(length(unique(data[,group]))!=2)
+	if(length(unique(data[,group]))!= 2)
 		stop(paste(group," variable must have only two different values (for healthy and diseased individuals)"), sep="")
-	
+		
 	data.new <- data[,c(marker,group,names.cov)]
 	omit.h <- apply(data.new[data.new[,group] == tag.healthy, c(marker, group, names.cov.hp)], 1, anyNA)	
 	omit.d <- apply(data.new[data.new[,group] != tag.healthy, ], 1, anyNA)
@@ -130,7 +130,7 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 				 pfunctions=array(as.double(pfunctions),dim=c(l.set.t*l.set.cont, extract.fROC$npartial+1,3)),
 				 coeff=as.double(coeff),	
 				 ROC=as.double(ROC),
-				 AUC=as.double(AUC),
+				 AUC=as.double(AUC),				
 				 pvalue=matrix(as.double(as.matrix(pvalue)), nrow = 2), PACKAGE = "npROCRegression")
 		
 	columns  <- switch(as.character(ci.fit),"TRUE" = 1:3, "FALSE" = 1)					 
@@ -139,11 +139,12 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 	# Partial functions 
 	pftemp <- array(fit$pfunctions, dim = c(l.set.t*l.set.cont, extract.fROC$npartial+1, 3))
 	colnames.cov <- NULL
-	m <- matrix(ncol = (extract.fROC$npartial+1)*length(columns), nrow = l.set.t*l.set.cont)	
-	for (i in 1:extract.fROC$npartial) {		
-		colnames.cov <- c(colnames.cov, paste(extract.fROC$partial[i], col.names,sep="")[columns])
-		m[,((i-1)*(length(columns))+1):(i*(length(columns)))] <- matrix(pftemp[,i,], ncol = 3)[, columns, drop=FALSE]
-	}
+	m <- matrix(ncol = (extract.fROC$npartial+1)*length(columns), nrow = l.set.t*l.set.cont)
+	if(extract.fROC$npartial > 0)	
+		for (i in 1:extract.fROC$npartial) {		
+			colnames.cov <- c(colnames.cov, paste(extract.fROC$partial[i], col.names,sep="")[columns])
+			m[,((i-1)*(length(columns))+1):(i*(length(columns)))] <- matrix(pftemp[,i,], ncol = 3)[, columns, drop=FALSE]
+		}
 	m[,((extract.fROC$npartial)*(length(columns))+1):((extract.fROC$npartial+1)*(length(columns)))] <- matrix(pftemp[,extract.fROC$npartial+1,], ncol=3)[,columns,drop=FALSE]   
 	m <- data.frame(m)
 	colnames.fpf <- paste("s(fpf)",col.names, sep="")[columns]
@@ -179,7 +180,8 @@ function(marker, formula.h=~1, formula.ROC=~1, group, tag.healthy, data, ci.fit=
 	res$pfunctions <- list(covariates = p.functions.cov, fpf = p.functions.fpf)
 	res$coefficients <- nncoeff
 	res$ROC <- t(array(fit$ROC, dim=c(l.set.t,l.set.cont), dimnames=list(set.t,1:l.set.cont)))
-	res$AUC <- array(fit$AUC, dim=c(l.set.cont,3),dimnames=list(1:l.set.cont, paste("AUC",col.names,sep="")))[,columns,drop=FALSE]		  
+	res$ROC <- t(array(fit$ROC, dim=c(l.set.t,l.set.cont), dimnames=list(set.t,1:l.set.cont)))
+	res$AUC <- array(fit$AUC, dim=c(l.set.cont,3),dimnames=list(1:l.set.cont, paste("AUC",col.names,sep="")))[,columns,drop=FALSE]				 
 	res$pvalue <- matrix(round(fit$pvalue,4), nrow = 2, dimnames = list(c("T2","T1"), extract.fROC$partial[test.partial]))
 	class(res)<-"DNPROCreg"
 	res

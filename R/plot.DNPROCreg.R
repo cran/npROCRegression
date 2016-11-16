@@ -71,7 +71,7 @@ function(x, ask = TRUE, ...) {
 	n.p <- length(p)
 	colnames(x$ROC) <- paste("p", round(p, 3), sep = "")
 	ROC <- cbind(x$newdata, x$ROC)	   
-	set.accuracy <-"AUC"
+	set.accuracy <- c("AUC", "EQ", "YI", "TH")
 	ind.accuracy <- is.element(set.accuracy, set.accuracy[is.element(set.accuracy, names(x))])   
 	if(any(ind.accuracy)) { 
 		accuracy <- set.accuracy[ind.accuracy]			  

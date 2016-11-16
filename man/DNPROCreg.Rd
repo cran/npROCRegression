@@ -8,8 +8,8 @@ Estimates the covariate-specific ROC curve in the presence of multidimensional c
 }
 \usage{
 DNPROCreg(marker, formula.h = ~1, formula.ROC = ~1, group, tag.healthy, data, 
-ci.fit = FALSE, test.partial = NULL, newdata = NULL, control = controlDNPROCreg(), 
-weights = NULL)
+ci.fit = FALSE, test.partial = NULL, newdata = NULL, 
+control = controlDNPROCreg(), weights = NULL)
 }
 \arguments{
   \item{marker}{A character string with the name of the diagnostic test variable.
@@ -52,7 +52,7 @@ As a result, the function \code{DNPROCreg()} provides a list with the following 
 
 Rodriguez- Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2011). A new flexible direct ROC regression model - Application to the detection of cardiovascular risk factors by anthropometric measures. Computational Statistics and Data Analysis, 55(12), 3257--3270.
 
-Rodriguez- Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2016). Boostrap-based procedures for inference in nonparametric ROC regression analysis. Technical report.
+Rodriguez- Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2016). Bootstrap-based procedures for inference in nonparametric ROC regression analysis. Technical report.
 }
 \author{
 Maria Xose Rodriguez-Alvarez and Javier Roca-Pardinas
