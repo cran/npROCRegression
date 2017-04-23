@@ -1415,8 +1415,8 @@
      implicit none
      double precision muhat, pr, vmax, vmin
      double precision, external :: normdev
-          vmax = 0.9999
-          vmin = 0.0001
+          vmax = 0.999
+          vmin = 0.001
           pr = min(vmax, muhat)
           pr = max(vmin, pr)
           pr = normdev(pr)
