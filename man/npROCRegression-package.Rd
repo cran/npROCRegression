@@ -12,15 +12,15 @@ The npROCRegression package allows the user to apply in practice the nonparametr
 \tabular{ll}{
 Package: \tab npROCRegression\cr
 Type: \tab Package\cr
-Version: \tab 1.0-5\cr
-Date: \tab 2017-04-21\cr
+Version: \tab 1.0-6\cr
+Date: \tab 2021-11-23\cr
 License: \tab GPL \cr
 }
 }
 \author{
 Maria Xose Rodriguez - Alvarez and Javier Roca-Pardinas
 
-Maintainer: Maria Xose Rodriguez - Alvarez <mxrodriguez@bcamath.org>
+Maintainer: Maria Xose Rodriguez - Alvarez <mxrodriguez@uvigo.es>
 }
 \references{
 Rodriguez-Alvarez, M.X., Roca-Pardinas, J. and Cadarso-Suarez, C. (2011a). ROC curve and covariates: extending induced methodology to the non-parametric framework. Statistics and Computing, 21(4), 483--499.

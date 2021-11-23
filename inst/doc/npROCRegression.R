@@ -1,7 +1,7 @@
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
-## ---- eval = TRUE--------------------------------------------------------
+## ---- eval = TRUE-------------------------------------------------------------
 library(npROCRegression)
 data(endosim)
 summary(endosim)
@@ -30,10 +30,10 @@ fit.women <- INPROCreg(marker = "bmi", covariate = "age", group = "idf_status",
 						newdata = data.frame(age = seq(18,85,l=50)))
 
 
-## ---- eval = TRUE--------------------------------------------------------
+## ---- eval = TRUE-------------------------------------------------------------
 names(fit.men)
 
-## ---- eval = TRUE--------------------------------------------------------
+## ---- eval = TRUE-------------------------------------------------------------
 summary(fit.men)
 
 summary(fit.women)
@@ -46,7 +46,7 @@ plot(fit.men, ask = FALSE)
 layout(matrix(c(1,1,2,2,3,3,4,4,5,5,6,6,0,7,7,0),4,4, byrow = TRUE), widths = c(1.75,1.75,1.75,1.75), heights = c(3.5,3.5,3.5,3.5))
 plot(fit.women, ask = FALSE)
 
-## ---- eval = TRUE--------------------------------------------------------
+## ---- eval = TRUE-------------------------------------------------------------
 library(npROCRegression)
 data(endosim)
 
@@ -58,10 +58,10 @@ fit.endo <- DNPROCreg(marker = "bmi", formula.h = "~ gender + s(age) + s(age, by
 				control = list(card.P=50, kbin=30, step.p=0.02),
 				ci.fit = TRUE, test.partial = 3)
 
-## ---- eval = TRUE--------------------------------------------------------
+## ---- eval = TRUE-------------------------------------------------------------
 names(fit.endo)
 
-## ---- eval = TRUE--------------------------------------------------------
+## ---- eval = TRUE-------------------------------------------------------------
 summary(fit.endo)
 
 ## ---- eval = TRUE, warning=FALSE, fig.cap = "Estimated covariate-specific ROC curves and AUCs, along with 95% pointwise bootstrap confidence interval, in male and female populations.", fig.height=7, fig.width=7----

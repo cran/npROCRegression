@@ -3910,12 +3910,7 @@
           Z0(n(2),nvar),X0(n(2)),W0(n(2)), &
           Z1(n(3),nvar),X1(n(3)),W1(n(3)), &
           M0(nb), V0(nb), &
-          M0s(nboot,nb), V0s(nboot,nb), &
           hopt(2,2), &
-          AUCs(nboot,nb), & 
-          YIs(nboot,nb), &
-          THs(nboot,nb), &
-          Fps(nboot, nb*ntb, nparr+npart+1), & 
           tbc(ntbc), pvalue(2), coeffb(20))
 
      !FPF grid
@@ -4004,8 +3999,16 @@
           allocate(X0b(n(1)),X1b(n(1)), &
           Z0b(n(1),nvar), &  
           Z1b(n(1),nvar), &
-          W0b(n(1)),W1b(n(1)))
-          
+          W0b(n(1)),W1b(n(1)), &
+          M0s(nboot,nb), V0s(nboot,nb), &
+          AUCs(nboot,nb), & 
+          YIs(nboot,nb), &
+          THs(nboot,nb), &
+          Fps(nboot, nb*ntb, nparr+npart+1))
+
+          M0s = 0.0
+          V0s = 0.0
+
           do iboot = 1,nboot
                call sampleROC(Z0, X0, W0, n(2), Z1, X1, W1, n(3), nvar, &
                     coutcome, Z0b, X0b, W0b, n0b, Z1b, X1b, W1b, n1b)
@@ -4057,17 +4060,18 @@
                AUC_(i,2) = QQ(AUCs(1,i), nboot, (1-level)/2)
                AUC_(i,3) = QQ(AUCs(1,i), nboot, 1-((1-level)/2))
                ! YI
-               YI_(i,2) = QQ(YIs(1,i), nboot, (1-level)/2)
-               YI_(i,3) = QQ(YIs(1,i), nboot, 1-((1-level)/2))
+               !YI_(i,2) = QQ(YIs(1,i), nboot, (1-level)/2)
+               !YI_(i,3) = QQ(YIs(1,i), nboot, 1-((1-level)/2))
                ! TH
-               TH_(i,2) = QQ(THs(1,i), nboot, (1-level)/2)
-               TH_(i,3) = QQ(THs(1,i), nboot, 1-((1-level)/2))
+               !TH_(i,2) = QQ(THs(1,i), nboot, (1-level)/2)
+               !TH_(i,3) = QQ(THs(1,i), nboot, 1-((1-level)/2))
+               ! For the moment we do not return M0_ and V0_. It is giving errors with valgrind
                ! M0
-               M0_(i,2) = QQ(M0s(1,i), nboot, (1-level)/2)
-               M0_(i,3) = QQ(M0s(1,i), nboot, 1-((1-level)/2))
+               !M0_(i,2) = QQ(M0s(1,i), nboot, (1-level)/2)
+               !M0_(i,3) = QQ(M0s(1,i), nboot, 1-((1-level)/2))
                ! V0
-               V0_(i,2) = QQ(V0s(1,i), nboot, (1-level)/2)
-               V0_(i,3) = QQ(V0s(1,i), nboot, 1-((1-level)/2))
+               !V0_(i,2) = QQ(V0s(1,i), nboot, (1-level)/2)
+               !V0_(i,3) = QQ(V0s(1,i), nboot, 1-((1-level)/2))
                do j=1,ntb
                     do k=1,nparr+npart+1
                               Fp_((i-1)*ntb+j,k,2)=QQ(Fps(1,(i-1)*ntb+j,k), &
@@ -4077,7 +4081,12 @@
                     end do     
                end do
           end do
-          deallocate (X0b, X1b, Z0b, Z1b, W0b, W1b)
+          deallocate (X0b, X1b, Z0b, Z1b, W0b, W1b, &
+          M0s, V0s, &
+          AUCs, &
+          YIs, &
+          THs, &
+          Fps)
      endif
      ! Covariate effect
      if(npartial.gt.0) then
@@ -4113,12 +4122,8 @@
           Z0,X0,W0, &
           Z1,X1,W1, &
           M0, V0, &
-          M0s, V0s, &
           hopt, &
-          AUCs, &
-          YIs, &
-          THs, &
-          Fps,tbc,pvalue,coeffb)   
+          tbc,pvalue,coeffb)   
      end
 !    ******************************************************************************
 !    ******************************************************************************
