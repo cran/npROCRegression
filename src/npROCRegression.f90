@@ -1,22 +1,22 @@
 !    ******************************************************************
 !    ******************************************************************
-     subroutine init_random_seed(seed)
-     implicit none
-     integer, parameter :: ssize = selected_int_kind (8)
-     integer seed, i
-     integer :: nseed = 12
-     integer (kind = ssize) :: t
-     integer (kind = ssize), allocatable :: iseed(:)
+!     subroutine init_random_seed(seed)
+!     implicit none
+!     integer, parameter :: ssize = selected_int_kind (8)
+!     integer seed, i
+!     integer :: nseed = 12
+!     integer (kind = ssize) :: t
+!     integer (kind = ssize), allocatable :: iseed(:)
      
-     call random_seed(size = nseed)
-     allocate(iseed(nseed))
-     do i = 1, nseed
-          t = seed*i
-          iseed(i) = t
-     end do
-     call random_seed(put = iseed)    
-     deallocate(iseed)
-     end subroutine init_random_seed
+!     call random_seed(size = nseed)
+!     allocate(iseed(nseed))
+!     do i = 1, nseed
+!          t = seed*i
+!          iseed(i) = t
+!     end do
+!     call random_seed(put = iseed)    
+!     deallocate(iseed)
+!     end subroutine init_random_seed
 !    ******************************************************************
 !    ******************************************************************
      subroutine sampleROC(Z0, X0, W0, n0, Z1, X1, W1, n1, nvar, &
@@ -330,13 +330,16 @@
      subroutine sample_int(n,size,II)
      implicit none
      integer n,size,II(n),i
-     double precision ru
+     double precision unifrnd, ru
+     call rndstart()
      do i=1,size
-          call random_number(ru)
+          !call random_number(ru)
+          ru = unifrnd()
           II(i)= int(ru*n + 1)
           if (II(i).le.1) II(i) = 1
           if (II(i).ge.n) II(i) = n
      end do
+     call rndend()
      end
 !    ******************************************************************
 !    ******************************************************************
@@ -1629,8 +1632,11 @@
      double precision function generateRV(t,ROC,nt)
      implicit none
      integer nt, i
-     double precision t(nt), ROC(nt), ru, min
-     call random_number(ru)
+     double precision t(nt), ROC(nt), ru, min, unifrnd
+     call rndstart()
+     ru = unifrnd()
+     call rndend()
+     !call random_number(ru)
      min = 1.0
      do i=1,nt
           if(ROC(i).ge.ru) then
@@ -3993,7 +3999,7 @@
           end do     
      end do
      !Set seed
-     call init_random_seed(seed)
+     !call init_random_seed(seed)
      !Confidence intervals
      if(cifit) then
           allocate(X0b(n(1)),X1b(n(1)), &
@@ -4231,7 +4237,7 @@
           end do
      end do
      !Set seed
-     call init_random_seed(seed)
+     !call init_random_seed(seed)
      !Inference about the effect
      if (test) then
           h = hb
